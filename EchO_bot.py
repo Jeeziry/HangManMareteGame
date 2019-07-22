@@ -1,4 +1,19 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
+# This is a simple echo bot using the decorator mechanism.
+# It echoes any incoming text messages.
+
+import telebot
+
+API_TOKEN = '807308900:AAHr0Zzd4-_zS9NOa9JuAMMpOgh4Btyo5Vk'
+
+bot = telebot.TeleBot(API_TOKEN)
+
+
+# Handle '/start' and '/pendu'
+@bot.message_handler(commands=['pendu', 'start'])
+def send_welcome(message):
+    bot.reply_to(message, main(message))
 """
 Created on Tue Jul 16 18:19:29 2019
 
@@ -69,7 +84,7 @@ dessins = [
 
 max_erreurs = len(dessins) - 1
 
-def lire_lettre(propositions):
+def lire_lettre(propositions,message):
 
     """
      Demande une lettre à l'utilisateur en s'assurant qu'elle n'a pas déjà
@@ -78,14 +93,19 @@ def lire_lettre(propositions):
     """
 
     while True:
-        lettre = input("Entrez une proposition de lettre : ")
+        lettre=message.text
+        # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
+        # @bot.message_handler(func=lambda message: True)
+        # def echo_message(message): 
+        #     bot.reply_to(message, message.text)
+        #     lettre = input("Entrez une proposition de lettre : ")
 
         if lettre in propositions:
-            print("Cette lettre a déjà été proposée.")
+            bot.reply_to(message,str("Cette lettre a déjà été proposée."))
         elif lettre not in minuscules or len(lettre) != 1:
-            print("Une seule lettre en minuscule, s'il vous plaît.")
+            bot.reply_to(message,str("Une seule lettre en minuscule, s'il vous plaît."))
         else:
-            break;
+            break
 
     propositions.append(lettre)
     return lettre
@@ -103,7 +123,7 @@ def mot_avec_tirets(mot, propositions):
             m = m + '-'
     return m
 
-def partie():
+def partie(message):
     
     """
      Joue une partie de pendu
@@ -116,48 +136,54 @@ def partie():
     propositions = []
 
 # Boucle d'interrogation de l'utilisateur
-    print(dessins[erreurs])
+    bot.reply_to(message,str(dessins[erreurs]))
 
     while True:
-        print("Lettres déjà proposées :", propositions)
-        print("Mot à deviner :", mot_avec_tirets(mot, propositions))
+        bot.reply_to(message,str("Lettres déjà proposées :") + str(propositions))
+        bot.reply_to(message, mot_avec_tirets(mot, propositions))
 
-        lettre = lire_lettre(propositions)
+        lettre = lire_lettre(propositions,message)
 
         if lettre in mot:
             if mot_avec_tirets(mot, propositions) == mot:
-                print("Bravo, vous avez gagné. Le mot était :", mot)
-                print("Nombre d'erreurs:", erreurs)
+                bot.reply_to(message,str("Bravo, vous avez gagné. Le mot était :", mot))
+                bot.reply_to(message,str("Nombre d'erreurs:", erreurs))
                 return True
         else:
             erreurs = erreurs + 1
-            print(dessins[erreurs])
+            bot.reply_to(message,str(dessins[erreurs]))
             if erreurs >= max_erreurs:
-                print("Ah ouais tu sais tu fais rien, le mot était :", mot)
+                bot.reply_to(message,str("Ah ouais tu sais tu fais rien, le mot était :", mot))
                 return False
 
 
-def main():
+def main(message):
     # Programme principal
-    print("Salam aleykoum, merci de jouer à mon pendu en python ! ")
+    bot.reply_to(message,str('Salam aleykoum, merci de jouer à mon pendu en python ! '))
     parties = 0
     victoires = 0
     while True:
         parties = parties + 1
-        if partie():
+        if partie(message):
             victoires = victoires + 1
 
         while True:
             cont = input("c pour continuer, a pour arrêter : ")
             if cont == 'c' or cont == 'a':
-                break;
+                break
 
         if cont == 'a':
-            break;
+            break
 
-    print("Vous avez joué", parties, "partie(s)")
-    print("Vous en avez gagné", victoires)
-    print("Au revoir et merci")
+    bot.reply_to(message,str('Vous avez joué', parties, 'partie(s)'))
+    bot.reply_to(message,str('Vous en avez gagné', victoires))
+    bot.reply_to(message,str('Au revoir et merci'))
 
-if __name__ == "__main__":
-    main();
+
+# # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
+# @bot.message_handler(func=lambda message: True)
+# def echo_message(message): 
+#     bot.reply_to(message, message.text)
+
+
+bot.polling()
